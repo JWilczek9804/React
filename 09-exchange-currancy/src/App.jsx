@@ -5,18 +5,21 @@ import { useEffect, useState } from "react";
 export default function App() {
   const [value, setValue] = useState(null);
   const [currancy, setCurrancy] = useState("USD");
-  const [exchangedCurrancy, setExchangedCurrancy] = useState("USD");
+  const [exchangedCurrancy, setExchangedCurrancy] = useState("EUR");
   const [rates, setRates] = useState(1);
 
   useEffect(() => {
     async function getCurrancyData() {
       try {
-        const responce = await fetch(
-          `https://api.frankfurter.app/latest?amount=100&from=${currancy}&to=${exchangedCurrancy}`
-        );
-        const data = await responce.json();
-        // console.log(data.rates[`${exchangedCurrancy}`]);
-        setRates(data.rates[`${exchangedCurrancy}`]);
+        if (currancy !== exchangedCurrancy) {
+          const responce = await fetch(
+            `https://api.frankfurter.app/latest?amount=100&from=${currancy}&to=${exchangedCurrancy}`
+          );
+          console.log(responce);
+          const data = await responce.json();
+          console.log(data);
+          setRates(data.rates[`${exchangedCurrancy}`]);
+        }
       } catch (err) {
         console.log(err);
       }
@@ -32,7 +35,7 @@ export default function App() {
         value={value}
         onChange={(e) => setValue(e.target?.value)}
       />
-      <select value={currancy} onSelect={(e) => setCurrancy(e.target.value)}>
+      <select value={currancy} onChange={(e) => setCurrancy(e.target.value)}>
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
         <option value="CAD">CAD</option>
@@ -40,14 +43,19 @@ export default function App() {
       </select>
       <select
         value={exchangedCurrancy}
-        onSelect={(e) => setExchangedCurrancy(e.target.value)}
+        onChange={(e) => setExchangedCurrancy(e.target.value)}
       >
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
         <option value="CAD">CAD</option>
         <option value="INR">INR</option>
       </select>
-      <p>OUTPUT</p>
+      <p>
+        OUTPUT:{" "}
+        {currancy === exchangedCurrancy
+          ? value
+          : ((value * rates) / 100).toFixed(2)}
+      </p>
     </div>
   );
 }
