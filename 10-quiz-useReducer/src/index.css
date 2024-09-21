@@ -8,7 +8,7 @@
   --color-accent: #ffa94d;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Codystar&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Codystar:wght@300;400&display=swap");
 
 * {
   margin: 0;
@@ -62,8 +62,10 @@ img {
 }
 
 h1 {
-  font-family: "Codystar";
+  font-family: "Codystar", sans-serif;
   font-size: 5.6rem;
+  font-weight: 300;
+  font-style: normal;
 }
 
 h2 {
