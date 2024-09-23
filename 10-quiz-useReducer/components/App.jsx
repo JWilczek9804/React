@@ -9,15 +9,19 @@ import Question from "./Question";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
 import FinishedScreen from "./FinishedScreen";
+import Timer from "./Timer";
+import Footer from "./Footer";
 
 const ACTION_TYPE = {
   FETCH_SUCCESS: "success",
   FETCH_FAILED: "error",
   QUIZ_START: "start",
   NEW_ANSWER: "newAnswer",
+  TIMER_DOWN: "timerDown",
   NEXT_QUESTION: "nextQuestion",
   QUIZ_FINISHED: "finished",
   RESTART_QUIZ: "restart",
+  SECS_PER_QUESTION: 30,
 };
 
 function reducer(state, action) {
@@ -25,7 +29,12 @@ function reducer(state, action) {
     case ACTION_TYPE.FETCH_SUCCESS:
       return { ...state, questions: action.payload, status: "ready" };
     case ACTION_TYPE.QUIZ_START:
-      return { ...state, status: "active" };
+      return {
+        ...state,
+        status: "active",
+        secondsRemaining:
+          state.questions.length * ACTION_TYPE.SECS_PER_QUESTION,
+      };
     case ACTION_TYPE.NEW_ANSWER:
       const question = state.questions.at(state.index);
       return {
@@ -36,7 +45,12 @@ function reducer(state, action) {
             ? state.points + question.points
             : state.points,
       };
-
+    case ACTION_TYPE.TIMER_DOWN:
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+        status: state.secondsRemaining === 0 ? "finished" : state.status,
+      }; // Ponieważ jest StrictMode, wszystko wczytuje się podwójnie
     case ACTION_TYPE.NEXT_QUESTION:
       return { ...state, index: state.index + 1, answer: null };
     case ACTION_TYPE.QUIZ_FINISHED:
@@ -45,9 +59,18 @@ function reducer(state, action) {
         status: "finished",
         highScore:
           state.points > state.highScore ? state.points : state.highScore,
+        secondsRemaining: state.secondsRemaining,
       };
     case ACTION_TYPE.RESTART_QUIZ:
-      return { ...state, status: "ready", index: 0, answer: null, points: 0 };
+      return {
+        ...state,
+        status: "ready",
+        index: 0,
+        answer: null,
+        points: 0,
+        secondsRemaining:
+          state.questions.length * ACTION_TYPE.SECS_PER_QUESTION,
+      };
     case ACTION_TYPE.FETCH_FAILED:
       return { ...state, status: "error" };
     default:
@@ -64,10 +87,13 @@ function App() {
     answer: null,
     points: 0,
     highScore: 0,
+    secondsRemaining: null,
   };
 
-  const [{ questions, status, index, answer, points, highScore }, dispatch] =
-    useReducer(reducer, initialState);
+  const [
+    { questions, status, index, answer, points, highScore, secondsRemaining },
+    dispatch,
+  ] = useReducer(reducer, initialState);
   // const { data, loading, error } = state;
 
   const numQuestions = questions.length;
@@ -130,14 +156,18 @@ function App() {
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={numQuestions}
-            >
-              Next
-            </NextButton>
+            <Footer>
+              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={numQuestions}
+              >
+                Next
+              </NextButton>
+            </Footer>
           </>
         )}
         {status === "finished" && (
