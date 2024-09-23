@@ -8,6 +8,7 @@ import StartScreen from "./StartScreen";
 import Question from "./Question";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
+import FinishedScreen from "./FinishedScreen";
 
 const ACTION_TYPE = {
   FETCH_SUCCESS: "success",
@@ -15,7 +16,8 @@ const ACTION_TYPE = {
   QUIZ_START: "start",
   NEW_ANSWER: "newAnswer",
   NEXT_QUESTION: "nextQuestion",
-  QUIZ_FINISHED: "finish",
+  QUIZ_FINISHED: "finished",
+  RESTART_QUIZ: "restart",
 };
 
 function reducer(state, action) {
@@ -41,7 +43,11 @@ function reducer(state, action) {
       return {
         ...state,
         status: "finished",
+        highScore:
+          state.points > state.highScore ? state.points : state.highScore,
       };
+    case ACTION_TYPE.RESTART_QUIZ:
+      return { ...state, status: "ready", index: 0, answer: null, points: 0 };
     case ACTION_TYPE.FETCH_FAILED:
       return { ...state, status: "error" };
     default:
@@ -57,12 +63,11 @@ function App() {
     index: 0,
     answer: null,
     points: 0,
+    highScore: 0,
   };
 
-  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
-    reducer,
-    initialState
-  );
+  const [{ questions, status, index, answer, points, highScore }, dispatch] =
+    useReducer(reducer, initialState);
   // const { data, loading, error } = state;
 
   const numQuestions = questions.length;
@@ -118,18 +123,31 @@ function App() {
               numQuestion={numQuestions}
               points={points}
               allPoints={allPoints}
+              answer={answer}
             />
             <Question
               question={questions[index]}
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton dispatch={dispatch} answer={answer}>
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            >
               Next
             </NextButton>
           </>
         )}
-        {status === "finished" && <p>FINISHED</p>}
+        {status === "finished" && (
+          <FinishedScreen
+            points={points}
+            allPoints={allPoints}
+            highScore={highScore}
+            dispatch={dispatch}
+          />
+        )}
       </Main>
     </div>
   );
